@@ -1,0 +1,14 @@
+[global]
+keyboard = "en-us"
+country = "us"
+fqdn = "pve03.local"
+mailto = "root@pve03.local"
+timezone = "America/Indiana/Indianapolis"
+root_password = "admin123$"
+
+[network]
+source = "from-dhcp"
+
+[disk-setup]
+filesystem = "ext4"
+disk_list = ["/dev/sda"]
