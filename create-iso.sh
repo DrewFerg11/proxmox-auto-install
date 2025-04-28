@@ -8,7 +8,7 @@ if [ "$#" -ne 1 ]; then
 fi
 
 iso_hostname=${1}
-proxmox_version=8.2-2
+proxmox_version=8.4-1
 
 # Verify the base proxmox installation iso exists.
 if [ ! -f proxmox-ve_"${proxmox_version}".iso ]; then
