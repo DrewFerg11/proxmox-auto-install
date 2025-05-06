@@ -1,0 +1,14 @@
+[global]
+keyboard = "en-us"
+country = "us"
+fqdn = "pve-n6i5syk-03.local"
+mailto = "root@pve-n6i5syk-03.local"
+timezone = "America/Indiana/Indianapolis"
+root_password = "admin123$"
+
+[network]
+source = "from-dhcp"
+
+[disk-setup]
+filesystem = "ext4"
+disk_list = ["/dev/sda"]

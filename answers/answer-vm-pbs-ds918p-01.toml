@@ -1,8 +1,8 @@
 [global]
 keyboard = "en-us"
 country = "us"
-fqdn = "pve02.local"
-mailto = "root@pve02.local"
+fqdn = "vm-pbs-ds918p-01.local"
+mailto = "root@vm-pbs-ds918p-01.local"
 timezone = "America/Indiana/Indianapolis"
 root_password = "admin123$"
 
