@@ -1,0 +1,60 @@
+name: Version Checker
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron:  '0 1 * * 0' # Every Sunday at 01:00 UTC
+
+jobs:
+  version-checker:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Check Versions
+        run: |
+          source ./version.properties
+
+          # Find latest PVE version
+          latest_pve_version=$(curl https://enterprise.proxmox.com/iso/ | grep -oP 'proxmox-ve_\K[0-9.-]+(?=\.iso)' | sort -u -V -r | head -n1)
+          echo "Current PVE version:" $PVE_VERSION
+          echo "Latest PVE version:" $latest_pve_version
+
+          if [ "$PVE_VERSION" != "$latest_pve_version" ]; then
+            echo "PVE version is not the latest. Please update to $latest_pve_version."
+            echo "NEW_PVE_VERSION=$latest_pve_version" >> $GITHUB_ENV
+          else
+            echo "PVE version is up to date."
+          fi
+
+          echo ""
+
+          # Find latest PBS version
+          latest_pbs_version=$(curl https://enterprise.proxmox.com/iso/ | grep -oP 'proxmox-backup-server_\K[0-9.-]+(?=\.iso)' | sort -u -V -r | head -n1)
+          echo "Current PBS version:" $PBS_VERSION
+          echo "Latest PBS version:" $latest_pbs_version
+
+          if [ "$PBS_VERSION" != "$latest_pbs_version" ]; then
+            echo "PBS version is not the latest. Please update to $latest_pbs_version."
+            echo "NEW_PBS_VERSION=$latest_pbs_version" >> $GITHUB_ENV
+          else
+            echo "PBS version is up to date."
+          fi
+      - name: New PVE Version
+        uses: JasonEtco/create-an-issue@v2
+        if: ${{ env.NEW_PVE_VERSION != '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROXMOX_TYPE: pve
+          NEW_VERSION: ${{ env.NEW_PVE_VERSION }}
+        with:
+          filename: .github/version-issue.md
+      - name: New PBS Version
+        uses: JasonEtco/create-an-issue@v2
+        if: ${{ env.NEW_PBS_VERSION != '' }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PROXMOX_TYPE: pbs
+          NEW_VERSION: ${{ env.NEW_PBS_VERSION }}
+        with:
+          filename: .github/version-issue.md
