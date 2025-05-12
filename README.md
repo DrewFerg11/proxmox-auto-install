@@ -42,3 +42,14 @@ You'll need to manually do the following:
     ![alt text](./resources/screenshot02.png)
 
 3. Plug the usb drive into your server and boot to auto install. 
+
+## Issues
+
+1. I've occasionally ran into the following error during installation, but if you reboot (`CRTL-D`) it ends up working on the second attempt.
+
+    > Installation failed: low level installer returned early: unable to initialize physical volume /dev/sda3
+    >
+    > Auto-installation failed (exit-code 1) - see above for errors.
+    >
+    > Installation aborted - unable to continue (type exit of CRTL-D to reboot)
+
