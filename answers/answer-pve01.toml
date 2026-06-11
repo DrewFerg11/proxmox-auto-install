@@ -12,3 +12,8 @@ source = "from-dhcp"
 [disk-setup]
 filesystem = "ext4"
 disk_list = ["/dev/sda"]
+
+[first-boot]
+source = "from-iso"
+ordering = "network-online"
+script = "first-boot-pve.sh"

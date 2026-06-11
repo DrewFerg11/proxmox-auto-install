@@ -1,0 +1,72 @@
+name: Community Script Watcher
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 2 * * 0' # Every Sunday at 02:00 UTC
+
+jobs:
+  watch-scripts:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Check for changes and manage issues
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          check_script() {
+            local type="$1"
+            local url="$2"
+            local hash_file=".github/community-script-hashes/post-${type}-install.sha256"
+            local label="community-script-${type}"
+
+            local stored_hash latest_hash
+            stored_hash=$(cat "$hash_file" 2>/dev/null || echo "")
+            latest_hash=$(curl -fsSL "$url" | sha256sum | awk '{print $1}')
+
+            echo "${type}: stored=${stored_hash} latest=${latest_hash}"
+
+            if [ "$stored_hash" == "$latest_hash" ]; then
+              echo "${type}: no change."
+              return
+            fi
+
+            # Look for an existing open issue for this script.
+            local existing_number existing_hash
+            existing_number=$(gh issue list --label "$label" --state open --json number,body \
+              --jq '.[0].number')
+            existing_hash=$(gh issue list --label "$label" --state open --json number,body \
+              --jq '.[0].body' | grep -oP '(?<=<!-- hash: )[a-f0-9]+(?= -->)')
+
+            if [ -n "$existing_number" ]; then
+              if [ "$existing_hash" == "$latest_hash" ]; then
+                echo "${type}: open issue #${existing_number} already tracks this hash."
+                return
+              fi
+              echo "${type}: closing stale issue #${existing_number} (upstream changed again)."
+              gh issue close "$existing_number" -c "Upstream script changed again before this was addressed. Closing in favor of a new issue."
+            fi
+
+            echo "${type}: opening new issue."
+            gh issue create \
+              --title "Community ${type} post-install script has changed" \
+              --label "enhancement,${label}" \
+              --assignee "DrewFerg11" \
+              --body "$(cat <<EOF
+          The upstream community \`post-${type}-install.sh\` script has changed.
+
+          - [ ] Review the diff: ${url}
+          - [ ] Update \`first-boot-${type}.sh\` if needed
+          - [ ] Update \`${hash_file}\` to \`${latest_hash}\`
+
+          <!-- hash: ${latest_hash} -->
+          EOF
+          )"
+          }
+
+          check_script "pve" "https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/pve/post-pve-install.sh"
+          check_script "pbs" "https://raw.githubusercontent.com/community-scripts/ProxmoxVE/main/tools/pve/post-pbs-install.sh"
