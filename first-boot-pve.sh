@@ -8,10 +8,16 @@
 
 set -euo pipefail
 
-# 1. Disable the enterprise (subscription-required) repository.
-if [ -f /etc/apt/sources.list.d/pve-enterprise.sources ]; then
-    sed -i 's/^Enabled: yes/Enabled: no/' /etc/apt/sources.list.d/pve-enterprise.sources
-fi
+# 1. Disable the enterprise (subscription-required) repositories.
+for file in /etc/apt/sources.list.d/*.sources; do
+    if grep -q "Components:.*pve-enterprise" "${file}" || grep -q "enterprise.proxmox.com.*ceph" "${file}"; then
+        if grep -q "^Enabled:" "${file}"; then
+            sed -i 's/^Enabled:.*/Enabled: false/' "${file}"
+        else
+            echo "Enabled: false" >> "${file}"
+        fi
+    fi
+done
 
 # 2. Enable the no-subscription repository.
 if ! grep -q "pve-no-subscription" /etc/apt/sources.list.d/proxmox.sources 2>/dev/null; then

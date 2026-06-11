@@ -53,7 +53,7 @@ printf "\nCreating automatic installation .iso for ${iso_hostname} using proxmox
 proxmox-auto-install-assistant prepare-iso ./"${proxmox_base}"_"${proxmox_version}".iso \
     --fetch-from iso \
     --answer-file ./answers/answer-"${iso_hostname}".toml \
-    --first-boot ./"${first_boot_script}"
+    --on-first-boot ./"${first_boot_script}"
 
 # Rename the .iso file.
 final_iso_name="${proxmox_base}"_"${iso_hostname}"_"${proxmox_version}".iso
