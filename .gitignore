@@ -1,2 +1,7 @@
 *.iso
 auto-installer-mode.toml
+
+# Ignore real answer files; keep tracked example files (answer-pve01.toml, answer-pbs01.toml) only
+answers/*.toml
+!answers/answer-pve01.toml
+!answers/answer-pbs01.toml

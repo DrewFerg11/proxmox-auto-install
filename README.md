@@ -12,8 +12,8 @@ You'll need to manually do the following:
 
 1. Download the latest version of the installer `.iso` and place it in the root directory of this repo.
     
-    - [Proxmox VE ISO Installer](https://www.proxmox.com/en/downloads/proxmox-virtual-environment) (currently 8.4-1) 
-    - [Proxmox Backup Server ISO Installer](https://www.proxmox.com/en/downloads/proxmox-backup-server) (currently 3.4-1) 
+    - [Proxmox VE ISO Installer](https://www.proxmox.com/en/downloads/proxmox-virtual-environment) (currently 9.2-1) 
+    - [Proxmox Backup Server ISO Installer](https://www.proxmox.com/en/downloads/proxmox-backup-server) (currently 4.2-1) 
 
     Example using Proxmox VE, version 8.2-2
 
@@ -43,6 +43,19 @@ You'll need to manually do the following:
 
 3. Plug the usb drive into your server and boot to auto install. 
 
+## First Boot
+
+Each answer file is configured to run a `first-boot-pve.sh` or `first-boot-pbs.sh` script on the first boot after installation. This script:
+
+1. Disables the enterprise repository (avoids apt errors/nags without a subscription).
+2. Enables the no-subscription repository.
+3. Removes the subscription nag from the web UI.
+4. Runs `apt update && apt dist-upgrade`, then reboots.
+
+This means the node will reboot itself once automatically after install before it's ready to use. After that reboot, the node is on up-to-date packages with working repos, ready for further configuration (e.g. via Ansible).
+
+If the [community post-install scripts](https://github.com/community-scripts/ProxmoxVE/blob/main/tools/pve/post-pve-install.sh) that this is based on ever change in a meaningful way, a [scheduled workflow](.github/workflows/community-script-watcher.yaml) will open an issue here as a reminder to review and update `first-boot-*.sh`.
+
 ## Issues
 
 1. I've occasionally ran into the following error during installation, but if you reboot (`CTRL-D`) it ends up working on the second attempt.
@@ -51,5 +64,5 @@ You'll need to manually do the following:
     >
     > Auto-installation failed (exit-code 1) - see above for errors.
     >
-    > Installation aborted - unable to continue (type exit of CTRL-D to reboot)
+    > Installation aborted - unable to continue (type exit or CTRL-D to reboot)
 
