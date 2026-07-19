@@ -1,4 +1,4 @@
-# !/bin/bash
+#!/bin/bash
 #
 # This script creates a proxmox installation .iso file using the proxmox-auto-install-assistant tool.
 #
@@ -26,9 +26,11 @@ fi
 # Determine proxmox version and base name.
 proxmox_version=${PVE_VERSION}
 proxmox_base=${PVE_BASE}
+first_boot_script="first-boot-pve.sh"
 if [ "$proxmox_type" == "pbs" ]; then
     proxmox_version=${PBS_VERSION}
     proxmox_base=${PBS_BASE}
+    first_boot_script="first-boot-pbs.sh"
 fi
 
 # Verify the hostname answer file exists.
@@ -48,11 +50,13 @@ fi
 printf "\nCreating automatic installation .iso for ${iso_hostname} using proxmox ${proxmox_type} version ${proxmox_version}.\n\n"
 
 # Create the auto install .iso file.
-proxmox-auto-install-assistant prepare-iso ./"${proxmox_base}"_"${proxmox_version}".iso --fetch-from iso --answer-file ./answers/answer-"${iso_hostname}".toml
+proxmox-auto-install-assistant prepare-iso ./"${proxmox_base}"_"${proxmox_version}".iso \
+    --fetch-from iso \
+    --answer-file ./answers/answer-"${iso_hostname}".toml \
+    --on-first-boot ./"${first_boot_script}"
 
 # Rename the .iso file.
 final_iso_name="${proxmox_base}"_"${iso_hostname}"_"${proxmox_version}".iso
-cp ./"${proxmox_base}"_"${proxmox_version}"-auto-from-iso.iso ./${final_iso_name}
-rm -f ./"${proxmox_base}"_"${proxmox_version}"-auto-from-iso.iso 
+mv ./"${proxmox_base}"_"${proxmox_version}"-auto-from-iso.iso ./${final_iso_name} 
 
 printf "\n\nFinished creating ${final_iso_name}\n"
