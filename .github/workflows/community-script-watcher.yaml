@@ -9,6 +9,7 @@ jobs:
   watch-scripts:
     runs-on: ubuntu-latest
     permissions:
+      contents: read
       issues: write
     steps:
       - name: Checkout code
@@ -38,9 +39,9 @@ jobs:
             # Look for an existing open issue for this script.
             local existing_number existing_hash
             existing_number=$(gh issue list --label "$label" --state open --json number,body \
-              --jq '.[0].number')
+              --jq '.[0].number // empty')
             existing_hash=$(gh issue list --label "$label" --state open --json number,body \
-              --jq '.[0].body' | grep -oP '(?<=<!-- hash: )[a-f0-9]+(?= -->)')
+              --jq '.[0].body // empty' | grep -oP '(?<=<!-- hash: )[a-f0-9]+(?= -->)' || true)
 
             if [ -n "$existing_number" ]; then
               if [ "$existing_hash" == "$latest_hash" ]; then
