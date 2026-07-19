@@ -58,7 +58,7 @@ If the [community post-install scripts](https://github.com/community-scripts/Pro
 
 ## Issues
 
-1. I've occasionally ran into the following error during installation, but if you reboot (`CRTL-D`) it ends up working on the second attempt.
+1. I've occasionally ran into the following error during installation, but if you reboot (`CTRL-D`) it ends up working on the second attempt.
 
     > Installation failed: low level installer returned early: unable to initialize physical volume /dev/sda3
     >
