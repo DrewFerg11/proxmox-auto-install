@@ -9,10 +9,34 @@
 set -euo pipefail
 export DEBIAN_FRONTEND=noninteractive
 
+# Exact-match a Deb822 "Components:" entry, rather than a plain substring
+# grep, so e.g. a hypothetical "pve-enterprise-extra" component can't
+# falsely match "pve-enterprise". Mirrors the upstream fix in
+# community-scripts/ProxmoxVE#16709.
+component_exists_in_file() {
+    local file="$1" component="$2" line comp
+    while IFS= read -r line; do
+        line="${line#*Components:}"
+        for comp in $line; do
+            [ "$comp" = "$component" ] && return 0
+        done
+    done < <(grep -h -E "^[^#]*Components:" "${file}" 2>/dev/null)
+    return 1
+}
+
+component_exists_in_sources() {
+    local component="$1" file
+    for file in /etc/apt/sources.list.d/*.sources; do
+        [ -e "${file}" ] || continue
+        component_exists_in_file "${file}" "${component}" && return 0
+    done
+    return 1
+}
+
 # 1. Disable the enterprise (pve-enterprise + ceph) repositories.
 for file in /etc/apt/sources.list.d/*.sources; do
     [ -e "${file}" ] || continue
-    if grep -q "Components:.*pve-enterprise" "${file}" || grep -q "enterprise.proxmox.com.*ceph" "${file}"; then
+    if component_exists_in_file "${file}" "pve-enterprise" || grep -q "enterprise.proxmox.com.*ceph" "${file}"; then
         if grep -q "^Enabled:" "${file}"; then
             sed -i 's/^Enabled:.*/Enabled: false/' "${file}"
         else
@@ -22,7 +46,7 @@ for file in /etc/apt/sources.list.d/*.sources; do
 done
 
 # 2. Enable the no-subscription repository.
-if ! grep -rq "pve-no-subscription" /etc/apt/sources.list.d/ 2>/dev/null; then
+if ! component_exists_in_sources "pve-no-subscription"; then
     cat > /etc/apt/sources.list.d/proxmox.sources <<EOF
 Types: deb
 URIs: http://download.proxmox.com/debian/pve
