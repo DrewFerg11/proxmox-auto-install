@@ -49,12 +49,17 @@ Each answer file is configured to run a `first-boot-pve.sh` or `first-boot-pbs.s
 
 1. Disables the enterprise repository (avoids apt errors/nags without a subscription).
 2. Enables the no-subscription repository.
-3. Removes the subscription nag from the web UI.
+3. Removes the subscription nag from the desktop web UI and, for PVE, the mobile web UI when installed.
 4. Runs `apt update && apt dist-upgrade`, then reboots.
 
 This means the node will reboot itself once automatically after install before it's ready to use. After that reboot, the node is on up-to-date packages with working repos, ready for further configuration (e.g. via Ansible).
 
 If the [community post-install scripts](https://github.com/community-scripts/ProxmoxVE/blob/main/tools/pve/post-pve-install.sh) that this is based on ever change in a meaningful way, a [scheduled workflow](.github/workflows/community-script-watcher.yaml) will open an issue here as a reminder to review and update `first-boot-*.sh`.
+
+## Validation
+
+With Node.js 18+ and Bash installed, run `node --test tests/first-boot.test.mjs`.
+These tests run both first-boot scripts against temporary files with package operations and reboot mocked, and check the mobile UI JavaScript separately. A full installation test requires a Proxmox host.
 
 ## Issues
 
