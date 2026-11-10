@@ -57,13 +57,33 @@ EOF
 fi
 
 # 3. Disable the subscription nag in the web UI via an apt hook, so it
-#    re-applies whenever a package update overwrites proxmoxlib.js.
+#    re-applies whenever a package update overwrites the desktop or mobile UI.
 mkdir -p /usr/local/bin
 cat > /usr/local/bin/pve-remove-nag.sh <<'EOF'
 #!/bin/sh
 WEB_JS=/usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js
 if [ -s "$WEB_JS" ] && ! grep -q NoMoreNagging "$WEB_JS"; then
     sed -i -e "/data\.status/ s/!//" -e "/data\.status/ s/active/NoMoreNagging/" "$WEB_JS"
+fi
+
+# Mirrors community-scripts/ProxmoxVE#18143. Skip hosts without the mobile UI.
+MOBILE_TPL=/usr/share/pve-yew-mobile-gui/index.html.tpl
+if [ -s "$MOBILE_TPL" ] && ! grep -q NoMoreNagging "$MOBILE_TPL"; then
+    sed -i '/<head>/r /dev/stdin' "$MOBILE_TPL" <<'HTML'
+  <script>
+    // NoMoreNagging
+    const nativeFetch = window.fetch.bind(window);
+    window.fetch = async (...args) => {
+      const res = await nativeFetch(...args);
+      const path = new URL(String(args[0]?.url ?? args[0]), location.href).pathname;
+      if (!['/api2/json/nodes', '/api2/extjs/nodes'].includes(path)) return res;
+      const body = await res.clone().json().catch(() => null);
+      if (!Array.isArray(body?.data)) return res;
+      body.data.forEach((node) => { if (!node.level) node.level = 'NoMoreNagging'; });
+      return new Response(JSON.stringify(body), { status: res.status, headers: res.headers });
+    };
+  </script>
+HTML
 fi
 EOF
 chmod 755 /usr/local/bin/pve-remove-nag.sh
